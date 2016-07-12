@@ -37,8 +37,9 @@ define(["dojo/_base/declare",
         "service/constants/Default",
         "webscripts/defaults",
         "dojo/_base/array",
-        "dojo/_base/lang"],
-        function(declare, BaseService, CoreXhr, NodeUtils, topics, AlfConstants, webScriptDefaults, array, lang) {
+        "dojo/_base/lang",
+        "jquery"],
+        function(declare, BaseService, CoreXhr, NodeUtils, topics, AlfConstants, webScriptDefaults, array, lang, $) {
    
    return declare([BaseService, CoreXhr], {
       
@@ -58,12 +59,45 @@ define(["dojo/_base/declare",
        */
       defaultMappings: {
          edit: {
-            "/org/alfresco/components/form/controls/textfield.ftl" : "alfresco/forms/controls/TextBox",
-            "/org/alfresco/components/form/controls/textarea.ftl"  : "alfresco/forms/controls/TextArea"
+            "/org/alfresco/components/form/controls/date.ftl": {
+               name: "alfresco/forms/controls/DateTextBox"
+            },
+            "/org/alfresco/components/form/controls/textfield.ftl": {
+               name: "alfresco/forms/controls/TextBox"
+            },
+            "/org/alfresco/components/form/controls/textarea.ftl": {
+               name: "alfresco/forms/controls/TextArea"
+            },
+            "/org/alfresco/components/form/controls/readonly.ftl": {
+               name: "alfresco/forms/controls/TextBox",
+               config: {
+                  disablementConfig: {
+                     initialValue: true
+                  }
+               }
+            }
          },
          view: {
-            "/org/alfresco/components/form/controls/textfield.ftl" : "alfresco/renderers/Property",
-            "/org/alfresco/components/form/controls/textarea.ftl" : "alfresco/renderers/Property"
+            "/org/alfresco/components/form/controls/checkbox.ftl": {
+               name: "alfresco/renderers/Boolean"
+            },
+            "/org/alfresco/components/form/controls/date.ftl": {
+               name: "alfresco/renderers/Date",
+               config: {
+                  simple: true
+                  // modifiedDateProperty: "prop_cm_modified",
+                  // modifiedByProperty: "prop_cm_modifier"
+               }
+            },
+            "/org/alfresco/components/form/controls/number.ftl": {
+               name: "alfresco/renderers/Property"
+            },
+            "/org/alfresco/components/form/controls/textfield.ftl": {
+               name: "alfresco/renderers/Property"
+            },
+            "/org/alfresco/components/form/controls/textarea.ftl": {
+               name: "alfresco/renderers/Property"
+            }
          },
          constraints: {
             "Alfresco.forms.validation.fileName": {
@@ -97,13 +131,22 @@ define(["dojo/_base/declare",
 
       widgetsForMappings: [
          {
+            name: "alfresco/renderers/Boolean"
+         },
+         {
+            name: "alfresco/renderers/Date"
+         },
+         {
+            name: "alfresco/forms/controls/DateTextBox"
+         },
+         {
+            name: "alfresco/renderers/Property"
+         },
+         {
             name: "alfresco/forms/controls/TextBox"
          },
          {
             name: "alfresco/forms/controls/TextArea"
-         },
-         {
-            name: "alfresco/renderers/Property"
          }
       ],
 
@@ -291,15 +334,15 @@ define(["dojo/_base/declare",
          var formControl = this.defaultMappings.view[controlTemplate];
          if (formControl)
          {
-            widget = {
+            widget = lang.clone(formControl);
+            var data = {
                id: targetField.name.toUpperCase(),
                label: targetField.label,
-               name: formControl,
                config: {
                   propertyToRender: targetField.dataKeyName
                }
             };
-            
+            $.extend(true, widget, data);
          }
          else
          {
@@ -323,9 +366,9 @@ define(["dojo/_base/declare",
          var formControl = this.defaultMappings.edit[controlTemplate];
          if (formControl)
          {
-            widget = {
+            widget = lang.clone(formControl);
+            var data = {
                id: targetField.name.toUpperCase(),
-               name: formControl,
                config: {
                   fieldId: targetField.name.toUpperCase(),
                   name: targetField.name,
@@ -333,6 +376,7 @@ define(["dojo/_base/declare",
                   description: targetField.description
                }
             };
+            $.extend(true, widget, data);
 
             if (formConfig.constraints)
             {
